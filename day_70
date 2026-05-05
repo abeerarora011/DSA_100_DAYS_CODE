@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define MAX 100
+
+typedef struct {
+    int vertex;
+    int distance;
+} Node;
+
+int graph[MAX][MAX];
+int dist[MAX];
+int visited[MAX];
+int n;
+
+Node pq[MAX];
+int size = 0;
+
+void swap(Node *a, Node *b) {
+    Node temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void push(int vertex, int distance) {
+    pq[size].vertex = vertex;
+    pq[size].distance = distance;
+    int i = size;
+    size++;
+
+    while (i > 0 && pq[(i-1)/2].distance > pq[i].distance) {
+        swap(&pq[i], &pq[(i-1)/2]);
+        i = (i-1)/2;
+    }
+}
+
+Node pop() {
+    Node root = pq[0];
+    pq[0] = pq[--size];
+
+    int i = 0;
+    while (1) {
+        int left = 2*i + 1;
+        int right = 2*i + 2;
+        int smallest = i;
+
+        if (left < size && pq[left].distance < pq[smallest].distance)
+            smallest = left;
+
+        if (right < size && pq[right].distance < pq[smallest].distance)
+            smallest = right;
+
+        if (smallest != i) {
+            swap(&pq[i], &pq[smallest]);
+            i = smallest;
+        } else break;
+    }
+
+    return root;
+}
+
+void dijkstra(int src) {
+    for (int i = 0; i < n; i++) {
+        dist[i] = INT_MAX;
+        visited[i] = 0;
+    }
+
+    dist[src] = 0;
+    push(src, 0);
+
+    while (size > 0) {
+        Node node = pop();
+        int u = node.vertex;
+
+        if (visited[u]) continue;
+        visited[u] = 1;
+
+        for (int v = 0; v < n; v++) {
+            if (graph[u][v] && !visited[v]) {
+                if (dist[u] + graph[u][v] < dist[v]) {
+                    dist[v] = dist[u] + graph[u][v];
+                    push(v, dist[v]);
+                }
+            }
+        }
+    }
+
+    printf("Vertex\tDistance from Source\n");
+    for (int i = 0; i < n; i++)
+        printf("%d\t%d\n", i, dist[i]);
+}
+
+int main() {
+    int src;
+
+    printf("Enter number of vertices: ");
+    scanf("%d", &n);
+
+    printf("Enter adjacency matrix:\n");
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            scanf("%d", &graph[i][j]);
+
+    printf("Enter source vertex: ");
+    scanf("%d", &src);
+
+    dijkstra(src);
+
+    return 0;
+}
